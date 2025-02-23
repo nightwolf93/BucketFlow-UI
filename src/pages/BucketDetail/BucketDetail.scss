@@ -22,28 +22,63 @@
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: $spacing-xl;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-    h2 {
-      color: #1e293b;
-      font-size: 1.5rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
+    .header-left {
+      h2 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
 
-      &::before {
-        content: '';
-        width: 4px;
-        height: 24px;
-        background-color: $primary-color;
-        border-radius: 2px;
+        &::before {
+          content: '';
+          width: 4px;
+          height: 24px;
+          background-color: $primary-color;
+          border-radius: 2px;
+        }
+      }
+
+      .bucket-stats {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
       }
     }
 
-    .bucket-stats {
-      margin-top: $spacing-sm;
-      color: #64748b;
-      font-size: 0.875rem;
+    .header-actions {
+      .refresh-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        color: #1e293b;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+
+        span {
+          font-size: 1.25rem;
+        }
+
+        &:hover {
+          background-color: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+
+        &:active {
+          background-color: #e2e8f0;
+        }
+      }
     }
   }
 
@@ -194,6 +229,7 @@
       td {
         font-size: 0.875rem;
         color: #1e293b;
+        transition: all 0.2s ease;
         max-width: 250px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -202,6 +238,22 @@
         &.timestamp-cell {
           color: #2563eb;
           font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+          font-size: 0.8125rem;
+        }
+
+        &[style] {
+          padding: 0.5rem 1rem;
+
+          span {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            border: 1px solid;
+          }
         }
       }
 
@@ -439,4 +491,11 @@
       }
     }
   }
+}
+
+// Ajoutez des styles pour l'animation de survol
+.data-table tr:hover td[style] {
+  opacity: 0.9;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
 } 

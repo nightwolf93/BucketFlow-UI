@@ -117,11 +117,74 @@ const BucketDetail = () => {
     }
   };
 
-  // Fonction mise à jour pour obtenir la valeur formatée d'une cellule
+  // Ajoutez ces fonctions pour gérer les styles spéciaux
+  const getSpecialFieldStyle = (fieldName, value) => {
+    fieldName = fieldName.toLowerCase();
+    
+    // Style pour les champs de type/status/état
+    if (['type', 'status', 'state', 'etat', 'statut'].includes(fieldName)) {
+      return getStatusStyle(value);
+    }
+
+    return null;
+  };
+
+  const getStatusStyle = (value) => {
+    const statusStyles = {
+      // Vert - Actions positives/légales
+      'give': { backgroundColor: '#dcfce7', color: '#166534', borderColor: '#86efac' },
+      'bank': { backgroundColor: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' },
+      
+      // Rouge - Actions illégales/dangereuses
+      'illegal': { backgroundColor: '#fee2e2', color: '#991b1b', borderColor: '#fecaca' },
+      'kill': { backgroundColor: '#fef2f2', color: '#dc2626', borderColor: '#fca5a5' },
+      
+      // Orange - Services d'urgence
+      'ems': { backgroundColor: '#ffedd5', color: '#c2410c', borderColor: '#fed7aa' },
+      'police': { backgroundColor: '#fff7ed', color: '#ea580c', borderColor: '#fdba74' },
+      
+      // Bleu - Commerce
+      'shop': { backgroundColor: '#dbeafe', color: '#1e40af', borderColor: '#93c5fd' },
+      'market': { backgroundColor: '#e0f2fe', color: '#0369a1', borderColor: '#7dd3fc' },
+      
+      // Violet - Modifications/Customisation
+      'mods': { backgroundColor: '#f3e8ff', color: '#6b21a8', borderColor: '#d8b4fe' },
+      'custom': { backgroundColor: '#fae8ff', color: '#86198f', borderColor: '#f0abfc' },
+      
+      // Jaune - Récompenses/Événements
+      'battlepass': { backgroundColor: '#fef9c3', color: '#854d0e', borderColor: '#fde047' },
+      'event': { backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' },
+      
+      // Cyan - Administration
+      'admin': { backgroundColor: '#cffafe', color: '#155e75', borderColor: '#67e8f9' },
+      'system': { backgroundColor: '#ecfeff', color: '#164e63', borderColor: '#22d3ee' },
+      
+      // Indigo - Véhicules
+      'vehicle': { backgroundColor: '#e0e7ff', color: '#3730a3', borderColor: '#a5b4fc' },
+      'garage': { backgroundColor: '#eef2ff', color: '#4338ca', borderColor: '#818cf8' },
+      
+      // Rose - Social
+      'social': { backgroundColor: '#fce7f3', color: '#9d174d', borderColor: '#fbcfe8' },
+      'chat': { backgroundColor: '#fdf2f8', color: '#be185d', borderColor: '#f9a8d4' },
+      
+      // Vert foncé - Argent/Économie
+      'money': { backgroundColor: '#d1fae5', color: '#065f46', borderColor: '#6ee7b7' },
+      'economy': { backgroundColor: '#ecfdf5', color: '#047857', borderColor: '#34d399' }
+    };
+    
+    return statusStyles[value?.toLowerCase()] || {
+      // Style par défaut pour les valeurs non définies
+      backgroundColor: '#f1f5f9',
+      color: '#475569',
+      borderColor: '#cbd5e1'
+    };
+  };
+
+  // Modifiez la fonction getCellValue pour inclure les styles spéciaux
   const getCellValue = (item, column) => {
     const value = item[column];
     
-    if (value === null || value === undefined) return '-';
+    if (value === null || value === undefined) return { value: '-' };
     
     // Détection et formatage des champs timestamp
     if (
@@ -130,11 +193,23 @@ const BucketDetail = () => {
        column.toLowerCase().includes('time')) && 
       (typeof value === 'string' || typeof value === 'number')
     ) {
-      return formatTimestamp(value);
+      return { 
+        value: formatTimestamp(value),
+        className: 'timestamp-cell'
+      };
     }
     
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+    // Vérification des styles spéciaux
+    const specialStyle = getSpecialFieldStyle(column, value);
+    if (specialStyle) {
+      return {
+        value: String(value),
+        style: specialStyle
+      };
+    }
+    
+    if (typeof value === 'object') return { value: JSON.stringify(value) };
+    return { value: String(value) };
   };
 
   // Fonction pour basculer l'expansion d'une ligne
@@ -148,6 +223,18 @@ const BucketDetail = () => {
       }
       return newSet;
     });
+  };
+
+  // Fonction pour rafraîchir les données
+  const refreshData = () => {
+    setFilters({
+      equality: {},
+      gte: {},
+      in: {},
+      like: {},
+      dateRanges: {}
+    });
+    loadData();
   };
 
   if (loading) {
@@ -171,9 +258,20 @@ const BucketDetail = () => {
   return (
     <div className="bucket-detail">
       <header className="bucket-header">
-        <h2>Bucket: {id}</h2>
-        <div className="bucket-stats">
-          <span>{data.length} éléments au total</span>
+        <div className="header-left">
+          <h2>Bucket: {id}</h2>
+          <div className="bucket-stats">
+            <span>{data.length} éléments au total</span>
+          </div>
+        </div>
+        <div className="header-actions">
+          <button 
+            className="refresh-btn"
+            onClick={refreshData}
+            title="Rafraîchir les données"
+          >
+            <span>↻</span> Rafraîchir
+          </button>
         </div>
       </header>
 
@@ -323,13 +421,13 @@ const BucketDetail = () => {
                                            column.toLowerCase().includes('time');
                         return (
                           <td 
-                            key={column} 
-                            title={getCellValue(item, column)}
+                            key={column}
+                            title={getCellValue(item, column).value}
+                            className={getCellValue(item, column).className}
+                            style={getCellValue(item, column).style}
                             onClick={() => toggleRowExpansion(index)}
-                            className={isTimestamp ? 'timestamp-cell' : ''}
-                            style={{ cursor: 'pointer' }}
                           >
-                            {getCellValue(item, column)}
+                            {getCellValue(item, column).value}
                           </td>
                         );
                       })}
