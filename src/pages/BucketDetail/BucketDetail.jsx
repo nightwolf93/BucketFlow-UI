@@ -110,7 +110,12 @@ const BucketDetail = () => {
   // Fonction pour formater un timestamp
   const formatTimestamp = (timestamp) => {
     try {
-      const date = new Date(timestamp);
+      // Convertir le timestamp en millisecondes si nécessaire
+      const timestampMs = String(timestamp).length === 10 
+        ? timestamp * 1000  // Si le timestamp est en secondes (10 chiffres)
+        : Number(timestamp); // Sinon on garde la valeur telle quelle
+
+      const date = new Date(timestampMs);
       return format(date, 'dd/MM/yyyy HH:mm:ss', { locale: fr });
     } catch {
       return timestamp; // Retourne la valeur originale si le parsing échoue
