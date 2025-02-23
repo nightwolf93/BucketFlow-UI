@@ -6,6 +6,12 @@ import './BucketDetail.scss';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
+import { monokaiSublime } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
+// Enregistrer le langage JSON
+SyntaxHighlighter.registerLanguage('json', json);
 
 const BucketDetail = () => {
   const { id } = useParams();
@@ -163,15 +169,15 @@ const BucketDetail = () => {
       'event': { backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' },
       
       // Cyan - Administration
-      'admin': { backgroundColor: '#cffafe', color: '#155e75', borderColor: '#67e8f9' },
-      'system': { backgroundColor: '#ecfeff', color: '#164e63', borderColor: '#22d3ee' },
+      'deposit': { backgroundColor: '#cffafe', color: '#155e75', borderColor: '#67e8f9' },
+      'withdrawal': { backgroundColor: '#e0e7ff', color: '#3730a3', borderColor: '#a5b4fc' },
       
       // Indigo - Véhicules
-      'vehicle': { backgroundColor: '#e0e7ff', color: '#3730a3', borderColor: '#a5b4fc' },
-      'garage': { backgroundColor: '#eef2ff', color: '#4338ca', borderColor: '#818cf8' },
+      'started': { backgroundColor: '#e0e7ff', color: '#3730a3', borderColor: '#a5b4fc' },
+      'completed': { backgroundColor: '#eef2ff', color: '#4338ca', borderColor: '#818cf8' },
       
       // Rose - Social
-      'social': { backgroundColor: '#fce7f3', color: '#9d174d', borderColor: '#fbcfe8' },
+      'car_sales': { backgroundColor: '#fce7f3', color: '#9d174d', borderColor: '#fbcfe8' },
       'chat': { backgroundColor: '#fdf2f8', color: '#be185d', borderColor: '#f9a8d4' },
       
       // Vert foncé - Argent/Économie
@@ -436,7 +442,17 @@ const BucketDetail = () => {
                       <tr className="expanded-content">
                         <td colSpan={columns.length + 2}>
                           <div className="content-wrapper">
-                            <pre>{JSON.stringify(item, null, 2)}</pre>
+                            <SyntaxHighlighter 
+                              language="json"
+                              style={monokaiSublime}
+                              customStyle={{
+                                margin: 0,
+                                borderRadius: '4px',
+                                fontSize: '13px'
+                              }}
+                            >
+                              {JSON.stringify(item, null, 2)}
+                            </SyntaxHighlighter>
                           </div>
                         </td>
                       </tr>
