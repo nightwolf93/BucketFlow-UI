@@ -1,0 +1,161 @@
+@import '../../styles/variables';
+
+.bucket-list {
+  .bucket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xl;
+    gap: $spacing-md;
+
+    .search-bar {
+      flex: 1;
+      position: relative;
+      max-width: 500px;
+
+      i {
+        position: absolute;
+        left: $spacing-md;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+      }
+
+      input {
+        width: 100%;
+        padding: $spacing-md $spacing-md $spacing-md 2.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background-color: white;
+        transition: all 0.2s;
+        color: black;
+
+        &:focus {
+          outline: none;
+          border-color: #60a5fa;
+          box-shadow: 0 0 0 3px rgba(#60a5fa, 0.1);
+        }
+      }
+    }
+
+    .create-bucket {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      padding: $spacing-md $spacing-lg;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: darken(#2563eb, 5%);
+        transform: translateY(-1px);
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .bucket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-lg;
+
+    .bucket-card {
+      background: white;
+      border-radius: 12px;
+      padding: $spacing-lg;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: $spacing-lg;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                   0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-color: #60a5fa;
+      }
+
+      .bucket-icon {
+        width: 48px;
+        height: 48px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 1.5rem;
+      }
+
+      .bucket-info {
+        flex: 1;
+
+        h3 {
+          color: #1e293b;
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin-bottom: $spacing-sm;
+        }
+
+        .bucket-stats {
+          display: flex;
+          gap: $spacing-md;
+          color: #64748b;
+          font-size: 0.85rem;
+
+          span {
+            display: flex;
+            align-items: center;
+            gap: $spacing-xs;
+
+            i {
+              font-size: 0.8rem;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .loading-state,
+  .error-state,
+  .empty-state {
+    text-align: center;
+    padding: $spacing-xxl;
+    color: #64748b;
+
+    i {
+      font-size: 2rem;
+      margin-bottom: $spacing-md;
+    }
+  }
+
+  .loading-state {
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #f1f5f9;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      margin: 0 auto $spacing-md;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+} 
