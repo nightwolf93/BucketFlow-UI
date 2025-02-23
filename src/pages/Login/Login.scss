@@ -219,4 +219,127 @@
   .login-form {
     padding: $spacing-xl $spacing-lg;
   }
+}
+
+.quick-connections {
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+  background: white;
+  border-radius: $border-radius-lg;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    font-size: 1rem;
+    color: #1e293b;
+    margin-bottom: $spacing-md;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    
+    i {
+      color: $primary-color;
+      font-size: 1.1rem;
+    }
+  }
+
+  .connections-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $spacing-md;
+
+    .connection-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: $border-radius-md;
+      padding: $spacing-md;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: $spacing-md;
+
+      &:hover {
+        background: white;
+        border-color: #cbd5e1;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+      }
+
+      .connection-info {
+        flex: 1;
+        min-width: 0;
+
+        .url {
+          color: #1e293b;
+          font-size: 0.875rem;
+          font-weight: 500;
+          margin-bottom: 0.25rem;
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .timestamp {
+          color: #64748b;
+          font-size: 0.75rem;
+          display: block;
+        }
+      }
+
+      .connection-actions {
+        display: flex;
+        gap: $spacing-xs;
+        flex-shrink: 0;
+
+        button {
+          padding: $spacing-xs $spacing-sm;
+          border-radius: $border-radius-sm;
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          font-size: 0.75rem;
+
+          &.connect-btn {
+            background: $primary-color;
+            color: white;
+            gap: $spacing-xs;
+
+            i {
+              font-size: 0.875rem;
+            }
+
+            &:hover:not(:disabled) {
+              background: darken($primary-color, 5%);
+            }
+          }
+
+          &.delete-btn {
+            background: #f1f5f9;
+            color: #94a3b8;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            justify-content: center;
+
+            i {
+              font-size: 0.75rem;
+            }
+
+            &:hover:not(:disabled) {
+              background: #fee2e2;
+              color: #dc2626;
+            }
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+  }
 } 

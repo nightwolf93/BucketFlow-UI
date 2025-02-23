@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setApiConfig } from '../../services/api';
 import logo from '../../assets/logo.png';
@@ -12,6 +12,26 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [savedConnections, setSavedConnections] = useState([]);
+
+  // Charger les connexions sauvegardées au démarrage
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('savedConnections') || '[]');
+    setSavedConnections(saved);
+  }, []);
+
+  // Sauvegarder une nouvelle connexion
+  const saveConnection = (connection) => {
+    const newConnections = [
+      connection,
+      ...savedConnections.filter(c => 
+        c.apiUrl !== connection.apiUrl || c.apiKey !== connection.apiKey
+      )
+    ].slice(0, 5); // Garder uniquement les 5 dernières connexions
+
+    localStorage.setItem('savedConnections', JSON.stringify(newConnections));
+    setSavedConnections(newConnections);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,24 +39,50 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Validation basique
       if (!formData.apiUrl || !formData.apiKey) {
         throw new Error('Veuillez remplir tous les champs');
       }
 
-      // Nettoyage de l'URL (suppression du trailing slash)
       const cleanApiUrl = formData.apiUrl.replace(/\/$/, '');
-
-      // Test de la configuration
       await setApiConfig(cleanApiUrl, formData.apiKey);
       
-      // Redirection vers la page d'accueil
+      // Sauvegarder la connexion réussie
+      saveConnection({
+        apiUrl: cleanApiUrl,
+        apiKey: formData.apiKey,
+        timestamp: new Date().toISOString()
+      });
+
       navigate('/');
     } catch (err) {
       setError(err.message || 'Erreur de configuration de l\'API');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickConnect = async (connection) => {
+    setFormData({
+      apiUrl: connection.apiUrl,
+      apiKey: connection.apiKey
+    });
+    
+    try {
+      setLoading(true);
+      setError('');
+      await setApiConfig(connection.apiUrl, connection.apiKey);
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Erreur de configuration de l\'API');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteConnection = (index) => {
+    const newConnections = savedConnections.filter((_, i) => i !== index);
+    localStorage.setItem('savedConnections', JSON.stringify(newConnections));
+    setSavedConnections(newConnections);
   };
 
   return (
@@ -47,6 +93,48 @@ const Login = () => {
           <h1>BucketFlow</h1>
           <p>Configuration de l'API</p>
         </div>
+
+        {savedConnections.length > 0 && (
+          <div className="quick-connections">
+            <h2>
+              <i className="fas fa-history"></i>
+              Connexions récentes
+            </h2>
+            <div className="connections-list">
+              {savedConnections.map((connection, index) => (
+                <div key={index} className="connection-item">
+                  <div className="connection-info">
+                    <span className="url" title={connection.apiUrl}>
+                      {connection.apiUrl}
+                    </span>
+                    <span className="timestamp">
+                      Dernière connexion : {new Date(connection.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="connection-actions">
+                    <button
+                      className="connect-btn"
+                      onClick={() => handleQuickConnect(connection)}
+                      disabled={loading}
+                      title="Se connecter"
+                    >
+                      <i className="fas fa-plug"></i>
+                      <span>Connecter</span>
+                    </button>
+                    <button
+                      className="delete-btn"
+                      onClick={() => handleDeleteConnection(index)}
+                      disabled={loading}
+                      title="Supprimer"
+                    >
+                      <i className="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
