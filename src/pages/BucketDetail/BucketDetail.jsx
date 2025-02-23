@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { fetchBucketData, deleteBucket, addBucketData, deleteBucketData } from '../../services/api';
+import { fetchBucketData, deleteBucket, addBucketData, deleteBucketData, fetchBuckets } from '../../services/api';
 import './BucketDetail.scss';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -15,6 +15,7 @@ SyntaxHighlighter.registerLanguage('json', json);
 
 const BucketDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,6 +34,7 @@ const BucketDetail = () => {
     value: ''
   });
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [buckets, setBuckets] = useState([]);
 
   // Chargement des données avec filtres
   const loadData = async () => {
@@ -55,6 +57,19 @@ const BucketDetail = () => {
       setLoading(false);
     }
   };
+
+  // Chargement de la liste des buckets
+  useEffect(() => {
+    const loadBuckets = async () => {
+      try {
+        const result = await fetchBuckets(); 
+        setBuckets(result.data);
+      } catch (err) {
+        console.error('Erreur lors du chargement des buckets:', err);
+      }
+    };
+    loadBuckets();
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -280,15 +295,24 @@ const BucketDetail = () => {
       <div className="detail-header">
         <div className="header-content">
           <div className="header-left">
-            <h2>
-              <i className="fas fa-database"></i>
-              Bucket: {id}
-            </h2>
-            <div className="bucket-stats">
-              <span>
-                <i className="fas fa-layer-group"></i>
-                {data.length} éléments au total
-              </span>
+            <div className="bucket-selector">
+              <select 
+                value={id}
+                onChange={(e) => navigate(`/bucket/${e.target.value}`)}
+                className="bucket-dropdown"
+              >
+                {buckets.map(bucket => (
+                  <option key={bucket.id} value={bucket.id}>
+                    {bucket.name || bucket.id}
+                  </option>
+                ))}
+              </select>
+              <div className="bucket-stats">
+                <span>
+                  <i className="fas fa-layer-group"></i>
+                  {data.length} éléments au total
+                </span>
+              </div>
             </div>
           </div>
           <div className="header-actions">

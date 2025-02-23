@@ -139,4 +139,4 @@ export const deleteBucketData = async (bucketId, filters) => {
   } catch (error) {
     handleApiError(error, 'Erreur lors de la suppression des données');
   }
-}; 
+};
