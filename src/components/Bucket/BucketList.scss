@@ -1,40 +1,65 @@
 @import '../../styles/variables';
+@import '../../styles/mixins';
 
 .bucket-list {
   .bucket-header {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-radius: 24px;
+    padding: $spacing-xl;
+    margin-bottom: $spacing-xl;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: $spacing-xl;
-    gap: $spacing-md;
+    gap: $spacing-lg;
+    position: relative;
+    overflow: hidden;
+
+    // Effet de grain
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.05;
+      mix-blend-mode: overlay;
+    }
 
     .search-bar {
       flex: 1;
-      position: relative;
       max-width: 500px;
+      position: relative;
 
       i {
         position: absolute;
         left: $spacing-md;
         top: 50%;
         transform: translateY(-50%);
-        color: #64748b;
+        color: #94a3b8;
+        font-size: 1rem;
+        pointer-events: none;
+        z-index: 1;
       }
 
       input {
         width: 100%;
-        padding: $spacing-md $spacing-md $spacing-md 2.5rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 0.9rem;
-        background-color: white;
-        transition: all 0.2s;
-        color: black;
+        padding: 0.875rem 1rem 0.875rem 2.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: white;
+        font-size: 0.95rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+
+        &::placeholder {
+          color: #94a3b8;
+        }
 
         &:focus {
           outline: none;
-          border-color: #60a5fa;
-          box-shadow: 0 0 0 3px rgba(#60a5fa, 0.1);
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
         }
       }
     }
@@ -43,69 +68,117 @@
       display: flex;
       align-items: center;
       gap: $spacing-sm;
-      padding: $spacing-md $spacing-lg;
-      background-color: #2563eb;
+      padding: 0.875rem 1.5rem;
+      background: linear-gradient(135deg, $primary-color, adjust-hue($primary-color, 40deg));
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 500;
-      transition: all 0.2s;
-
-      &:hover {
-        background-color: darken(#2563eb, 5%);
-        transform: translateY(-1px);
-      }
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba($primary-color, 0.2),
+                 0 2px 4px -1px rgba($primary-color, 0.1);
 
       i {
-        font-size: 0.9rem;
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px -1px rgba($primary-color, 0.3),
+                   0 4px 6px -1px rgba($primary-color, 0.2);
+
+        i {
+          transform: rotate(90deg);
+        }
       }
     }
   }
 
   .bucket-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
     gap: $spacing-lg;
 
     .bucket-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: $spacing-lg;
       text-decoration: none;
       color: inherit;
-      transition: all 0.2s;
+      transition: all 0.3s ease;
       border: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
       gap: $spacing-lg;
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, $primary-color, adjust-hue($primary-color, 40deg));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-                   0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        border-color: #60a5fa;
+        transform: translateY(-4px);
+        border-color: transparent;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                   0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+        &::before {
+          opacity: 1;
+        }
+
+        .bucket-icon {
+          transform: scale(1.1);
+          background: linear-gradient(135deg, rgba($primary-color, 0.1), rgba(adjust-hue($primary-color, 40deg), 0.1));
+          
+          i {
+            background: linear-gradient(135deg, $primary-color, adjust-hue($primary-color, 40deg));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+        }
       }
 
       .bucket-icon {
-        width: 48px;
-        height: 48px;
-        background: #f1f5f9;
-        border-radius: 12px;
+        width: 52px;
+        height: 52px;
+        background: #f8fafc;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #2563eb;
-        font-size: 1.5rem;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+
+        i {
+          font-size: 1.5rem;
+          color: #64748b;
+          transition: all 0.3s ease;
+        }
       }
 
       .bucket-info {
         flex: 1;
+        min-width: 0;
 
         h3 {
           color: #1e293b;
           font-size: 1.1rem;
           font-weight: 600;
           margin-bottom: $spacing-sm;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .bucket-stats {
@@ -120,7 +193,8 @@
             gap: $spacing-xs;
 
             i {
-              font-size: 0.8rem;
+              font-size: 0.875rem;
+              color: #94a3b8;
             }
           }
         }
@@ -128,25 +202,42 @@
     }
   }
 
-  .loading-state,
-  .error-state,
-  .empty-state {
-    text-align: center;
+  .state-message {
+    background: white;
+    border-radius: 16px;
     padding: $spacing-xxl;
+    text-align: center;
     color: #64748b;
+    margin: $spacing-xl 0;
+    border: 1px dashed #e2e8f0;
 
     i {
-      font-size: 2rem;
+      font-size: 2.5rem;
       margin-bottom: $spacing-md;
+      background: linear-gradient(135deg, $primary-color, adjust-hue($primary-color, 40deg));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h3 {
+      color: #1e293b;
+      font-size: 1.25rem;
+      margin-bottom: $spacing-sm;
+    }
+
+    p {
+      color: #64748b;
+      max-width: 400px;
+      margin: 0 auto;
     }
   }
 
   .loading-state {
     .spinner {
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       border: 3px solid #f1f5f9;
-      border-top-color: #2563eb;
+      border-top-color: $primary-color;
       border-radius: 50%;
       margin: 0 auto $spacing-md;
       animation: spin 1s linear infinite;
@@ -156,6 +247,25 @@
   @keyframes spin {
     to {
       transform: rotate(360deg);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .bucket-list {
+    .bucket-header {
+      flex-direction: column;
+      padding: $spacing-lg;
+
+      .search-bar {
+        max-width: none;
+        width: 100%;
+      }
+    }
+
+    .bucket-grid {
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
     }
   }
 } 

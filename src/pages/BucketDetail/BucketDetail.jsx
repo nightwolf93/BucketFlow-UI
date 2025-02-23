@@ -1,9 +1,11 @@
+import React, { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { fetchBucketData, deleteBucket, addBucketData, deleteBucketData } from '../../services/api';
 import './BucketDetail.scss';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 const BucketDetail = () => {
   const { id } = useParams();
@@ -245,7 +247,10 @@ const BucketDetail = () => {
   if (loading) {
     return (
       <div className="bucket-detail">
-        <div className="loading">Chargement des données...</div>
+        <div className="loading-state">
+          <div className="spinner" />
+          <h3>Chargement des données...</h3>
+        </div>
       </div>
     );
   }
@@ -253,7 +258,11 @@ const BucketDetail = () => {
   if (error) {
     return (
       <div className="bucket-detail">
-        <div className="error">Erreur: {error}</div>
+        <div className="error-state">
+          <i className="fas fa-exclamation-circle"></i>
+          <h3>Une erreur est survenue</h3>
+          <p>{error}</p>
+        </div>
       </div>
     );
   }
@@ -262,83 +271,45 @@ const BucketDetail = () => {
 
   return (
     <div className="bucket-detail">
-      <header className="bucket-header">
-        <div className="header-left">
-          <h2>Bucket: {id}</h2>
-          <div className="bucket-stats">
-            <span>{data.length} éléments au total</span>
-          </div>
-        </div>
-        <div className="header-actions">
-          <button 
-            className="refresh-btn"
-            onClick={refreshData}
-            title="Rafraîchir les données"
-          >
-            <span>↻</span> Rafraîchir
-          </button>
-        </div>
-      </header>
-
-      {/* Section d'aide pour les filtres */}
-      <section className="filters-help">
-        <details>
-          <summary>Guide d'utilisation des filtres</summary>
-          <div className="filters-help-content">
-            <h4>Types de filtres disponibles :</h4>
-            
-            <div className="filter-type">
-              <h5>Égal à</h5>
-              <p>Recherche une correspondance exacte.</p>
-              <em>Exemple : champ = "valeur"</em>
-            </div>
-
-            <div className="filter-type">
-              <h5>Supérieur ou égal à</h5>
-              <p>Trouve les valeurs supérieures ou égales à la valeur spécifiée.</p>
-              <em>Exemple : prix ≥ 100</em>
-            </div>
-
-            <div className="filter-type">
-              <h5>Dans la liste</h5>
-              <p>Recherche parmi une liste de valeurs (séparées par des virgules).</p>
-              <em>Exemple : status = "actif,en_attente,terminé"</em>
-            </div>
-
-            <div className="filter-type">
-              <h5>Contient (Like)</h5>
-              <p>Recherche avec caractères spéciaux :</p>
-              <ul>
-                <li><code>%</code> : remplace n'importe quelle séquence de caractères</li>
-                <li><code>_</code> : remplace un seul caractère</li>
-              </ul>
-              <p>Exemples :</p>
-              <ul>
-                <li><code>nom[like] = "Jean%"</code> : trouve "Jean", "Jeanne", "Jeannette", etc.</li>
-                <li><code>email[like] = "%@gmail.com"</code> : trouve tous les emails Gmail</li>
-                <li><code>texte[like] = "%mot%"</code> : trouve toutes les entrées contenant "mot"</li>
-              </ul>
-            </div>
-
-            <div className="filter-type">
-              <h5>Entre deux dates</h5>
-              <p>Recherche entre deux dates (format YYYY-MM-DD).</p>
-              <em>Exemple : "2024-01-01,2024-12-31"</em>
+      <div className="detail-header">
+        <div className="header-content">
+          <div className="header-left">
+            <h2>
+              <i className="fas fa-database"></i>
+              Bucket: {id}
+            </h2>
+            <div className="bucket-stats">
+              <span>
+                <i className="fas fa-layer-group"></i>
+                {data.length} éléments au total
+              </span>
             </div>
           </div>
-        </details>
-      </section>
+          <div className="header-actions">
+            <button 
+              className="refresh-btn"
+              onClick={refreshData}
+              title="Rafraîchir les données"
+            >
+              <i className="fas fa-sync-alt"></i>
+              Rafraîchir
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {/* Filtres */}
       <section className="filters-section">
-        <h3>Filtres</h3>
+        <h3>
+          <i className="fas fa-filter"></i>
+          Filtres
+        </h3>
         <div className="filter-form">
           <select
             value={filterInput.field}
             onChange={e => setFilterInput(prev => ({ ...prev, field: e.target.value }))}
           >
             <option value="">Sélectionner un champ</option>
-            {getColumns(data).map(column => (
+            {columns.map(column => (
               <option key={column} value={column}>{column}</option>
             ))}
           </select>
@@ -363,11 +334,11 @@ const BucketDetail = () => {
             onClick={addFilter}
             disabled={!filterInput.field || !filterInput.value}
           >
+            <i className="fas fa-plus"></i>
             Ajouter le filtre
           </button>
         </div>
 
-        {/* Filtres actifs */}
         <div className="active-filters">
           {Object.entries(filters.equality).map(([field, value]) => (
             <div key={field} className="filter-tag">
@@ -381,17 +352,27 @@ const BucketDetail = () => {
               <button onClick={() => removeFilter('gte', field)}>×</button>
             </div>
           ))}
+          {Object.entries(filters.in).map(([field, value]) => (
+            <div key={field} className="filter-tag">
+              {field} in [{value.join(', ')}]
+              <button onClick={() => removeFilter('in', field)}>×</button>
+            </div>
+          ))}
           {Object.entries(filters.like).map(([field, value]) => (
             <div key={field} className="filter-tag">
               {field} contient {value}
               <button onClick={() => removeFilter('like', field)}>×</button>
             </div>
           ))}
-          {/* ... autres types de filtres ... */}
+          {Object.entries(filters.dateRanges).map(([field, {start, end}]) => (
+            <div key={field} className="filter-tag">
+              {field} entre {start} et {end}
+              <button onClick={() => removeFilter('dateRanges', field)}>×</button>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Nouvelle section de données en tableau */}
       <section className="data-section">
         {data.length > 0 ? (
           <div className="table-container">
@@ -407,92 +388,87 @@ const BucketDetail = () => {
               </thead>
               <tbody>
                 {currentItems.map((item, index) => (
-                  <>
-                    <tr 
-                      key={index}
-                      className={expandedRows.has(index) ? 'expanded' : ''}
-                    >
+                  <React.Fragment key={index}>
+                    <tr className={expandedRows.has(index) ? 'expanded' : ''}>
                       <td className="expand-column">
                         <button 
                           className="expand-btn"
                           onClick={() => toggleRowExpansion(index)}
                         >
-                          {expandedRows.has(index) ? '▼' : '▶'}
+                          <i className={`fas fa-chevron-${expandedRows.has(index) ? 'down' : 'right'}`}></i>
                         </button>
                       </td>
-                      {columns.map(column => {
-                        const isTimestamp = column.toLowerCase().includes('timestamp') || 
-                                           column.toLowerCase().includes('date') ||
-                                           column.toLowerCase().includes('time');
-                        return (
-                          <td 
-                            key={column}
-                            title={getCellValue(item, column).value}
-                            className={getCellValue(item, column).className}
-                            style={getCellValue(item, column).style}
-                            onClick={() => toggleRowExpansion(index)}
-                          >
-                            {getCellValue(item, column).value}
-                          </td>
-                        );
-                      })}
+                      {columns.map(column => (
+                        <td 
+                          key={column}
+                          title={getCellValue(item, column).value}
+                          className={getCellValue(item, column).className}
+                          style={getCellValue(item, column).style}
+                          onClick={() => toggleRowExpansion(index)}
+                        >
+                          <span>{getCellValue(item, column).value}</span>
+                        </td>
+                      ))}
                       <td className="actions">
                         <button 
                           className="delete-btn"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            try {
-                              await deleteBucketData(id, {
-                                equality: Object.fromEntries(
-                                  Object.entries(item).map(([key, value]) => [key, String(value)])
-                                )
-                              });
-                              loadData();
-                            } catch (err) {
-                              setError(err.message);
+                            if (window.confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) {
+                              try {
+                                await deleteBucketData(id, {
+                                  equality: Object.fromEntries(
+                                    Object.entries(item).map(([key, value]) => [key, String(value)])
+                                  )
+                                });
+                                loadData();
+                              } catch (err) {
+                                setError(err.message);
+                              }
                             }
                           }}
                         >
-                          Supprimer
+                          <i className="fas fa-trash-alt"></i>
                         </button>
                       </td>
                     </tr>
                     {expandedRows.has(index) && (
                       <tr className="expanded-content">
                         <td colSpan={columns.length + 2}>
-                          <div className="json-viewer">
+                          <div className="content-wrapper">
                             <pre>{JSON.stringify(item, null, 2)}</pre>
                           </div>
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
+
+            <div className="pagination">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                <i className="fas fa-chevron-left"></i>
+              </button>
+              <span className="page-info">
+                Page {currentPage} sur {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                <i className="fas fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
         ) : (
           <div className="empty-state">
-            Aucune donnée trouvée
-          </div>
-        )}
-
-        {/* Pagination */}
-        {data.length > 0 && (
-          <div className="pagination">
-            <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              Précédent
-            </button>
-            <span>Page {currentPage} sur {totalPages}</span>
-            <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Suivant
-            </button>
+            <i className="fas fa-inbox"></i>
+            <h3>Aucune donnée</h3>
+            <p>Aucune donnée ne correspond aux critères de recherche.</p>
           </div>
         )}
       </section>

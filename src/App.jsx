@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { initApi, isApiConfigured } from './services/api';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login/Login';
@@ -7,11 +8,88 @@ import Home from './pages/Home/Home';
 import BucketDetail from './pages/BucketDetail/BucketDetail';
 import './App.scss';
 
+// Composant d'animation pour wrapper les pages
+const PageTransition = ({ children }) => {
+  const pageVariants = {
+    initial: {
+      opacity: 0,
+      y: 20
+    },
+    enter: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        ease: 'easeOut'
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: {
+        duration: 0.2,
+        ease: 'easeIn'
+      }
+    }
+  };
+
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="enter"
+      exit="exit"
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 const ProtectedRoute = ({ children }) => {
   if (!isApiConfigured()) {
     return <Navigate to="/login" replace />;
   }
   return <Layout>{children}</Layout>;
+};
+
+// Composant pour gérer les animations entre les routes
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route 
+          path="/login" 
+          element={
+            <PageTransition>
+              <Login />
+            </PageTransition>
+          } 
+        />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <Home />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bucket/:id"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <BucketDetail />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
 };
 
 const App = () => {
@@ -21,25 +99,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bucket/:id"
-          element={
-            <ProtectedRoute>
-              <BucketDetail />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+      <AnimatedRoutes />
     </BrowserRouter>
   );
 };

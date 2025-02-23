@@ -68,4 +68,21 @@
     color: #16a34a;
     border: 1px solid #bbf7d0;
   }
+}
+
+#root {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.layout {
+  position: relative;
+  min-height: 100vh;
+  
+  // Pour éviter les problèmes de z-index pendant les animations
+  > div {
+    position: relative;
+    z-index: 1;
+  }
 } 
