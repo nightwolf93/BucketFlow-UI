@@ -16,6 +16,7 @@ const BucketDetail = () => {
     equality: {},
     gte: {},
     in: {},
+    like: {},
     dateRanges: {}
   });
   const [filterInput, setFilterInput] = useState({
@@ -30,7 +31,15 @@ const BucketDetail = () => {
     try {
       setLoading(true);
       const result = await fetchBucketData(id, filters);
-      setData(result);
+      // Tri des données par timestamp décroissant
+      const sortedResult = result.sort((a, b) => {
+        const timestampA = new Date(a.timestamp || a.created_at || 0).getTime();
+        const timestampB = new Date(b.timestamp || b.created_at || 0).getTime();
+        return timestampB - timestampA;
+      });
+      setData(sortedResult);
+      // Réinitialisation de la page courante
+      setCurrentPage(1);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -66,6 +75,9 @@ const BucketDetail = () => {
         case 'in':
           newFilters.in = { ...prev.in, [field]: value.split(',').map(v => v.trim()) };
           break;
+        case 'like':
+          newFilters.like = { ...prev.like, [field]: value };
+          break;
         case 'between':
           const [start, end] = value.split(',').map(v => v.trim());
           newFilters.dateRanges = { ...prev.dateRanges, [field]: { start, end } };
@@ -74,7 +86,9 @@ const BucketDetail = () => {
       return newFilters;
     });
 
+    // Réinitialisation du formulaire de filtre et de la page courante
     setFilterInput({ field: '', operator: 'equality', value: '' });
+    setCurrentPage(1);
   };
 
   // Suppression d'un filtre
@@ -163,6 +177,55 @@ const BucketDetail = () => {
         </div>
       </header>
 
+      {/* Section d'aide pour les filtres */}
+      <section className="filters-help">
+        <details>
+          <summary>Guide d'utilisation des filtres</summary>
+          <div className="filters-help-content">
+            <h4>Types de filtres disponibles :</h4>
+            
+            <div className="filter-type">
+              <h5>Égal à</h5>
+              <p>Recherche une correspondance exacte.</p>
+              <em>Exemple : champ = "valeur"</em>
+            </div>
+
+            <div className="filter-type">
+              <h5>Supérieur ou égal à</h5>
+              <p>Trouve les valeurs supérieures ou égales à la valeur spécifiée.</p>
+              <em>Exemple : prix ≥ 100</em>
+            </div>
+
+            <div className="filter-type">
+              <h5>Dans la liste</h5>
+              <p>Recherche parmi une liste de valeurs (séparées par des virgules).</p>
+              <em>Exemple : status = "actif,en_attente,terminé"</em>
+            </div>
+
+            <div className="filter-type">
+              <h5>Contient (Like)</h5>
+              <p>Recherche avec caractères spéciaux :</p>
+              <ul>
+                <li><code>%</code> : remplace n'importe quelle séquence de caractères</li>
+                <li><code>_</code> : remplace un seul caractère</li>
+              </ul>
+              <p>Exemples :</p>
+              <ul>
+                <li><code>nom[like] = "Jean%"</code> : trouve "Jean", "Jeanne", "Jeannette", etc.</li>
+                <li><code>email[like] = "%@gmail.com"</code> : trouve tous les emails Gmail</li>
+                <li><code>texte[like] = "%mot%"</code> : trouve toutes les entrées contenant "mot"</li>
+              </ul>
+            </div>
+
+            <div className="filter-type">
+              <h5>Entre deux dates</h5>
+              <p>Recherche entre deux dates (format YYYY-MM-DD).</p>
+              <em>Exemple : "2024-01-01,2024-12-31"</em>
+            </div>
+          </div>
+        </details>
+      </section>
+
       {/* Filtres */}
       <section className="filters-section">
         <h3>Filtres</h3>
@@ -180,6 +243,7 @@ const BucketDetail = () => {
             <option value="equality">Égal à</option>
             <option value="gte">Supérieur ou égal à</option>
             <option value="in">Dans la liste</option>
+            <option value="like">Contient</option>
             <option value="between">Entre deux dates</option>
           </select>
           <input
@@ -203,6 +267,12 @@ const BucketDetail = () => {
             <div key={field} className="filter-tag">
               {field} ≥ {value}
               <button onClick={() => removeFilter('gte', field)}>×</button>
+            </div>
+          ))}
+          {Object.entries(filters.like).map(([field, value]) => (
+            <div key={field} className="filter-tag">
+              {field} contient {value}
+              <button onClick={() => removeFilter('like', field)}>×</button>
             </div>
           ))}
           {/* ... autres types de filtres ... */}

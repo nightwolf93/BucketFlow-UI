@@ -367,4 +367,64 @@
     color: #dc2626;
     background-color: #fee2e2;
   }
+}
+
+.filters-help {
+  margin: 1rem 0;
+  
+  summary {
+    cursor: pointer;
+    color: #666;
+    font-weight: 500;
+    
+    &:hover {
+      color: #333;
+    }
+  }
+
+  .filters-help-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+
+    h4 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .filter-type {
+      margin-bottom: 1.5rem;
+
+      h5 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        margin: 0.5rem 0;
+      }
+
+      em {
+        color: #666;
+        font-style: italic;
+      }
+
+      ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+
+        li {
+          margin: 0.25rem 0;
+        }
+      }
+
+      code {
+        background: #e9ecef;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-family: monospace;
+      }
+    }
+  }
 } 

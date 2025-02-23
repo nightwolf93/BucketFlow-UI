@@ -97,6 +97,11 @@ export const fetchBucketData = async (bucketId, filters = {}) => {
       queryParams.append(`${key}[in]`, value.join(','));
     });
 
+    // Ajout des filtres like
+    Object.entries(filters.like || {}).forEach(([key, value]) => {
+      queryParams.append(`${key}[like]`, value);
+    });
+
     // Ajout des filtres de dates
     Object.entries(filters.dateRanges || {}).forEach(([key, value]) => {
       queryParams.append(`${key}[between]`, `${value.start},${value.end}`);
