@@ -230,12 +230,15 @@ const BucketDetail = () => {
       <section className="filters-section">
         <h3>Filtres</h3>
         <div className="filter-form">
-          <input
-            type="text"
-            placeholder="Nom du champ"
+          <select
             value={filterInput.field}
             onChange={e => setFilterInput(prev => ({ ...prev, field: e.target.value }))}
-          />
+          >
+            <option value="">Sélectionner un champ</option>
+            {getColumns(data).map(column => (
+              <option key={column} value={column}>{column}</option>
+            ))}
+          </select>
           <select
             value={filterInput.operator}
             onChange={e => setFilterInput(prev => ({ ...prev, operator: e.target.value }))}
@@ -252,7 +255,13 @@ const BucketDetail = () => {
             value={filterInput.value}
             onChange={e => setFilterInput(prev => ({ ...prev, value: e.target.value }))}
           />
-          <button className="primary" onClick={addFilter}>Ajouter le filtre</button>
+          <button 
+            className="primary" 
+            onClick={addFilter}
+            disabled={!filterInput.field || !filterInput.value}
+          >
+            Ajouter le filtre
+          </button>
         </div>
 
         {/* Filtres actifs */}
