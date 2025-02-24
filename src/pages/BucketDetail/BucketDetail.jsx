@@ -35,6 +35,8 @@ const BucketDetail = () => {
   });
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [buckets, setBuckets] = useState([]);
+  const [editingFilter, setEditingFilter] = useState(null);
+  const [activeArray, setActiveArray] = useState(null);
 
   // Chargement des données avec filtres
   const loadData = async () => {
@@ -208,13 +210,44 @@ const BucketDetail = () => {
     };
   };
 
-  // Modifiez la fonction getCellValue pour inclure les styles spéciaux
+  // Ajouter cette fonction utilitaire en haut du fichier
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // Optionnel : Vous pouvez ajouter un feedback visuel ici
+    });
+  };
+
+  // Fonction pour gérer l'affichage des détails
+  const showArrayDetails = (event, items) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setActiveArray({
+      items,
+      position: {
+        left: rect.left,
+        top: rect.bottom + 10,
+      }
+    });
+  };
+
+  const hideArrayDetails = (event) => {
+    // Ne rien faire si on passe sur le portal ou la zone tampon
+    const relatedTarget = event.relatedTarget;
+    const detailsElement = document.getElementById('array-details-portal');
+    const bufferElement = document.getElementById('array-details-buffer');
+    
+    if (detailsElement?.contains(relatedTarget) || bufferElement?.contains(relatedTarget)) {
+      return;
+    }
+    setActiveArray(null);
+  };
+
+  // Modifier la partie de rendu des tableaux dans getCellValue
   const getCellValue = (item, column) => {
     const value = item[column];
     
     if (value === null || value === undefined) return { value: '-' };
     
-    // Détection et formatage des champs timestamp
+    // Détection des timestamps
     if (
       (column.toLowerCase().includes('timestamp') || 
        column.toLowerCase().includes('date') ||
@@ -225,6 +258,31 @@ const BucketDetail = () => {
         value: formatTimestamp(value),
         className: 'timestamp-cell'
       };
+    }
+    
+    // Détection et formatage des tableaux
+    if (Array.isArray(value) || (typeof value === 'string' && value.startsWith('[') && value.endsWith(']'))) {
+      let arrayValue;
+      try {
+        arrayValue = Array.isArray(value) ? value : JSON.parse(value);
+        return {
+          value: (
+            <div className="array-cell">
+              <div 
+                className="array-preview"
+                onMouseEnter={(e) => showArrayDetails(e, arrayValue)}
+                onMouseLeave={hideArrayDetails}
+              >
+                {arrayValue.length} identifiants
+                <i className="fas fa-chevron-down"></i>
+              </div>
+            </div>
+          ),
+          isComponent: true
+        };
+      } catch (e) {
+        return { value: String(value) };
+      }
     }
     
     // Vérification des styles spéciaux
@@ -263,6 +321,43 @@ const BucketDetail = () => {
       dateRanges: {}
     });
     loadData();
+  };
+
+  // Fonction pour commencer l'édition d'un filtre
+  const startEditFilter = (type, field, value) => {
+    setEditingFilter({
+      type,
+      field,
+      value: type === 'in' ? value.join(', ') : 
+             type === 'dateRanges' ? `${value.start},${value.end}` : 
+             String(value)
+    });
+  };
+
+  // Fonction pour sauvegarder l'édition d'un filtre
+  const saveEditFilter = () => {
+    if (!editingFilter) return;
+    const { type, field, value } = editingFilter;
+
+    setFilters(prev => {
+      const newFilters = { ...prev };
+      
+      switch (type) {
+        case 'in':
+          newFilters[type][field] = value.split(',').map(v => v.trim());
+          break;
+        case 'dateRanges':
+          const [start, end] = value.split(',').map(v => v.trim());
+          newFilters[type][field] = { start, end };
+          break;
+        default:
+          newFilters[type][field] = value;
+      }
+      
+      return newFilters;
+    });
+
+    setEditingFilter(null);
   };
 
   if (loading) {
@@ -372,32 +467,149 @@ const BucketDetail = () => {
         <div className="active-filters">
           {Object.entries(filters.equality).map(([field, value]) => (
             <div key={field} className="filter-tag">
-              {field} = {value}
-              <button onClick={() => removeFilter('equality', field)}>×</button>
+              {editingFilter?.type === 'equality' && editingFilter?.field === field ? (
+                <div className="filter-edit">
+                  <span>{field} = </span>
+                  <input
+                    type="text"
+                    value={editingFilter.value}
+                    onChange={e => setEditingFilter(prev => ({ ...prev, value: e.target.value }))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveEditFilter();
+                      if (e.key === 'Escape') setEditingFilter(null);
+                    }}
+                    autoFocus
+                  />
+                  <button onClick={saveEditFilter} className="save-btn">
+                    <i className="fas fa-check"></i>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span onClick={() => startEditFilter('equality', field, value)}>
+                    {field} = {value}
+                  </span>
+                  <button onClick={() => removeFilter('equality', field)}>×</button>
+                </>
+              )}
             </div>
           ))}
           {Object.entries(filters.gte).map(([field, value]) => (
             <div key={field} className="filter-tag">
-              {field} ≥ {value}
-              <button onClick={() => removeFilter('gte', field)}>×</button>
+              {editingFilter?.type === 'gte' && editingFilter?.field === field ? (
+                <div className="filter-edit">
+                  <span>{field} ≥ </span>
+                  <input
+                    type="text"
+                    value={editingFilter.value}
+                    onChange={e => setEditingFilter(prev => ({ ...prev, value: e.target.value }))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveEditFilter();
+                      if (e.key === 'Escape') setEditingFilter(null);
+                    }}
+                    autoFocus
+                  />
+                  <button onClick={saveEditFilter} className="save-btn">
+                    <i className="fas fa-check"></i>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span onClick={() => startEditFilter('gte', field, value)}>
+                    {field} ≥ {value}
+                  </span>
+                  <button onClick={() => removeFilter('gte', field)}>×</button>
+                </>
+              )}
             </div>
           ))}
           {Object.entries(filters.in).map(([field, value]) => (
             <div key={field} className="filter-tag">
-              {field} in [{value.join(', ')}]
-              <button onClick={() => removeFilter('in', field)}>×</button>
+              {editingFilter?.type === 'in' && editingFilter?.field === field ? (
+                <div className="filter-edit">
+                  <span>{field} in [</span>
+                  <input
+                    type="text"
+                    value={editingFilter.value}
+                    onChange={e => setEditingFilter(prev => ({ ...prev, value: e.target.value }))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveEditFilter();
+                      if (e.key === 'Escape') setEditingFilter(null);
+                    }}
+                    autoFocus
+                  />
+                  <span>]</span>
+                  <button onClick={saveEditFilter} className="save-btn">
+                    <i className="fas fa-check"></i>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span onClick={() => startEditFilter('in', field, value)}>
+                    {field} in [{value.join(', ')}]
+                  </span>
+                  <button onClick={() => removeFilter('in', field)}>×</button>
+                </>
+              )}
             </div>
           ))}
           {Object.entries(filters.like).map(([field, value]) => (
             <div key={field} className="filter-tag">
-              {field} contient {value}
-              <button onClick={() => removeFilter('like', field)}>×</button>
+              {editingFilter?.type === 'like' && editingFilter?.field === field ? (
+                <div className="filter-edit">
+                  <span>{field} contient </span>
+                  <input
+                    type="text"
+                    value={editingFilter.value}
+                    onChange={e => setEditingFilter(prev => ({ ...prev, value: e.target.value }))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveEditFilter();
+                      if (e.key === 'Escape') setEditingFilter(null);
+                    }}
+                    autoFocus
+                  />
+                  <button onClick={saveEditFilter} className="save-btn">
+                    <i className="fas fa-check"></i>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span onClick={() => startEditFilter('like', field, value)}>
+                    {field} contient {value}
+                  </span>
+                  <button onClick={() => removeFilter('like', field)}>×</button>
+                </>
+              )}
             </div>
           ))}
           {Object.entries(filters.dateRanges).map(([field, {start, end}]) => (
             <div key={field} className="filter-tag">
-              {field} entre {start} et {end}
-              <button onClick={() => removeFilter('dateRanges', field)}>×</button>
+              {editingFilter?.type === 'dateRanges' && editingFilter?.field === field ? (
+                <div className="filter-edit">
+                  <span>{field} entre </span>
+                  <input
+                    type="text"
+                    value={editingFilter.value}
+                    onChange={e => setEditingFilter(prev => ({ ...prev, value: e.target.value }))}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') saveEditFilter();
+                      if (e.key === 'Escape') setEditingFilter(null);
+                    }}
+                    autoFocus
+                  />
+                  <span> et </span>
+                  <button onClick={saveEditFilter} className="save-btn">
+                    <i className="fas fa-check"></i>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <span onClick={() => startEditFilter('dateRanges', field, {start, end})}>
+                    {field} entre {start} et {end}
+                  </span>
+                  <button onClick={() => removeFilter('dateRanges', field)}>×</button>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -512,6 +724,65 @@ const BucketDetail = () => {
           </div>
         )}
       </section>
+
+      {/* Portal pour les détails du tableau avec zone tampon */}
+      {activeArray && (
+        <>
+          <div 
+            id="array-details-buffer"
+            className="array-details-buffer"
+            style={{
+              position: 'fixed',
+              left: activeArray.position.left,
+              top: activeArray.position.top - 10,
+              height: '10px',
+              width: '400px',
+              zIndex: 99999
+            }}
+            onMouseEnter={() => {/* Ne rien faire */}}
+          />
+          <div 
+            id="array-details-portal"
+            className="array-details-portal"
+            style={{
+              position: 'fixed',
+              left: activeArray.position.left,
+              top: activeArray.position.top,
+              zIndex: 99999
+            }}
+            onMouseLeave={(e) => {
+              // Ne fermer que si on ne va pas vers la cellule ou la zone tampon
+              const relatedTarget = e.relatedTarget;
+              const bufferElement = document.getElementById('array-details-buffer');
+              
+              if (!bufferElement?.contains(relatedTarget)) {
+                setActiveArray(null);
+              }
+            }}
+          >
+            {activeArray.items.map((item, index) => {
+              const match = typeof item === 'string' && item.match(/^([^:]+):/);
+              const type = match ? match[1] : null;
+              const content = match ? item.split(':')[1] : item;
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`array-item ${type ? `type-${type}` : ''}`}
+                  onClick={() => copyToClipboard(item)}
+                  title="Cliquer pour copier"
+                >
+                  {type && <span className="type-badge">{type}</span>}
+                  <span className="content">{content}</span>
+                  <span className="copy-icon">
+                    <i className="fas fa-copy"></i>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -12,10 +12,16 @@ const Header = () => {
         </Link>
         <nav>
           <ul>
-            <li>
+          <li>
               <Link to="/" className="nav-link">
                 <i className="fas fa-home"></i>
                 Accueil
+              </Link>
+            </li>
+            <li>
+              <Link to="/dashboards" className="nav-link">
+                <i className="fas fa-chart-line"></i>
+                Tableaux de bord
               </Link>
             </li>
             <li>

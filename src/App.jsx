@@ -6,6 +6,8 @@ import Layout from './components/Layout/Layout';
 import Login from './pages/Login/Login';
 import Home from './pages/Home/Home';
 import BucketDetail from './pages/BucketDetail/BucketDetail';
+import DashboardList from './pages/Dashboards/DashboardList';
+import DashboardEditor from './pages/Dashboards/DashboardEditor';
 import './App.scss';
 
 // Composant d'animation pour wrapper les pages
@@ -83,6 +85,36 @@ const AnimatedRoutes = () => {
             <ProtectedRoute>
               <PageTransition>
                 <BucketDetail />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboards"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <DashboardList />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboards/new"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <DashboardEditor />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboards/:id"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <DashboardEditor />
               </PageTransition>
             </ProtectedRoute>
           }
