@@ -28,6 +28,16 @@ const BucketList = () => {
     bucket.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}M`;
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}k`;
+    }
+    return num.toString();
+  };
+
   if (loading) return (
     <div className="loading-state">
       <div className="spinner"></div>
@@ -71,7 +81,7 @@ const BucketList = () => {
               <div className="bucket-stats">
                 <span>
                   <i className="fas fa-layer-group"></i>
-                  {bucket.entriesCount || 0} entrées
+                  {formatNumber(bucket.entriesCount || 0)} entrées
                 </span>
                 <span>
                   <i className="fas fa-clock"></i>

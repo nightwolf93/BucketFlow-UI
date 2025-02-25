@@ -63,7 +63,19 @@ const handleApiError = (error, customMessage) => {
 export const fetchBuckets = async () => {
   try {
     const response = await api.get('/buckets');
-    return response.data;
+    
+    // Récupérer le nombre d'entrées pour chaque bucket
+    const bucketsWithCounts = await Promise.all(
+      response.data.data.map(async (bucket) => {
+        const countData = await api.get(`/buckets/${bucket.name}/data?limit=1`);
+        return {
+          ...bucket,
+          entriesCount: countData.data.data.totalItems
+        };
+      })
+    );
+    
+    return { data: bucketsWithCounts };
   } catch (error) {
     handleApiError(error, 'Erreur lors de la récupération des buckets');
   }
@@ -78,9 +90,13 @@ export const createBucket = async (name) => {
   }
 };
 
-export const fetchBucketData = async (bucketId, filters = {}) => {
+export const fetchBucketData = async (bucketId, filters = {}, page = 1, limit = 100) => {
   try {
     const queryParams = new URLSearchParams();
+    
+    // Ajout des paramètres de pagination
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
     
     // Ajout des filtres d'égalité
     Object.entries(filters.equality || {}).forEach(([key, value]) => {
@@ -108,6 +124,12 @@ export const fetchBucketData = async (bucketId, filters = {}) => {
     });
 
     const response = await api.get(`/buckets/${bucketId}/data?${queryParams}`);
+    
+    // Vérification du succès de la réponse
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Erreur lors de la récupération des données');
+    }
+
     return response.data.data;
   } catch (error) {
     handleApiError(error, 'Erreur lors de la récupération des données du bucket');

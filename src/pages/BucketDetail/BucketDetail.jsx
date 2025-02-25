@@ -20,7 +20,9 @@ const BucketDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(100);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState({
     equality: {},
     gte: {},
@@ -42,16 +44,12 @@ const BucketDetail = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const result = await fetchBucketData(id, filters);
-      // Tri des données par timestamp décroissant
-      const sortedResult = result.sort((a, b) => {
-        const timestampA = new Date(a.timestamp || a.created_at || 0).getTime();
-        const timestampB = new Date(b.timestamp || b.created_at || 0).getTime();
-        return timestampB - timestampA;
-      });
-      setData(sortedResult);
-      // Réinitialisation de la page courante
-      setCurrentPage(1);
+      const result = await fetchBucketData(id, filters, currentPage, itemsPerPage);
+      
+      // Mise à jour des données et des informations de pagination
+      setData(result.items);
+      setTotalItems(result.totalItems);
+      setTotalPages(result.totalPages);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -75,13 +73,7 @@ const BucketDetail = () => {
 
   useEffect(() => {
     loadData();
-  }, [id, filters]);
-
-  // Gestion de la pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  }, [id, filters, currentPage, itemsPerPage]);
 
   // Ajout d'un filtre
   const addFilter = () => {
@@ -405,7 +397,7 @@ const BucketDetail = () => {
               <div className="bucket-stats">
                 <span>
                   <i className="fas fa-layer-group"></i>
-                  {data.length} éléments au total
+                  {totalItems} éléments au total
                 </span>
               </div>
             </div>
@@ -629,7 +621,7 @@ const BucketDetail = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((item, index) => (
+                {data.map((item, index) => (
                   <React.Fragment key={index}>
                     <tr className={expandedRows.has(index) ? 'expanded' : ''}>
                       <td className="expand-column">
@@ -706,7 +698,7 @@ const BucketDetail = () => {
                 <i className="fas fa-chevron-left"></i>
               </button>
               <span className="page-info">
-                Page {currentPage} sur {totalPages}
+                Page {currentPage} sur {totalPages} ({totalItems} éléments)
               </span>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
