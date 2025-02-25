@@ -753,7 +753,10 @@ const BucketDetail = () => {
             }}
           >
             {activeArray.items.map((item, index) => {
-              const match = typeof item === 'string' && item.match(/^([^:]+):/);
+              // Vérifier si l'item est une chaîne de caractères
+              const isString = typeof item === 'string';
+              // Chercher le pattern type:contenu seulement si c'est une chaîne
+              const match = isString && item.match(/^([^:]+):/);
               const type = match ? match[1] : null;
               const content = match ? item.split(':')[1] : item;
               
@@ -761,11 +764,13 @@ const BucketDetail = () => {
                 <div 
                   key={index} 
                   className={`array-item ${type ? `type-${type}` : ''}`}
-                  onClick={() => copyToClipboard(item)}
+                  onClick={() => copyToClipboard(typeof item === 'object' ? JSON.stringify(item, null, 2) : String(item))}
                   title="Cliquer pour copier"
                 >
                   {type && <span className="type-badge">{type}</span>}
-                  <span className="content">{content}</span>
+                  <span className="content">
+                    {typeof content === 'object' ? JSON.stringify(content, null, 2) : String(content)}
+                  </span>
                   <span className="copy-icon">
                     <i className="fas fa-copy"></i>
                   </span>
